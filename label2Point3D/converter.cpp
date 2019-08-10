@@ -17,6 +17,8 @@ static const int        cDepthHeight = 424;
 static const int        cColorWidth = 1920;
 static const int        cColorHeight = 1080;
 
+
+/*
 std::vector<std::string> ListDirectoryContents(const char* sDir, char* filename_pattern)
 {
 	std::vector<std::string> allfiles;
@@ -65,6 +67,7 @@ std::vector<std::string> ListDirectoryContents(const char* sDir, char* filename_
 
 	return allfiles;
 }
+*/
 
 std::vector<std::string> csv_read_row(std::istream& file, char delimiter) {
 	std::stringstream ss;
@@ -97,23 +100,33 @@ std::vector<std::string> csv_read_row(std::istream& file, char delimiter) {
 	}
 }
 
-std::string replaceAll(std::string& str, const std::string& from, const std::string& to) {
-	size_t start_pos = 0;
-	while ((start_pos = str.find(from, start_pos)) != std::string::npos)  //from을 찾을 수 없을 때까지
-	{
-		str.replace(start_pos, from.length(), to);
-		start_pos += to.length(); // 중복검사를 피하고 from.length() > to.length()인 경우를 위해서
-	}
-	return str;
-}
+
 
 int main(void)
 {
 	std::string datafolder = "./data";
 
-	
+
 	//read calibration parameters
-	double cx_d = 1, cy_d = 1, fx_d = 1, fy_d = 1;
+	std::ifstream intrinsics("./data/intrinsics.csv");
+
+	double intrinsic_array[4];
+	if (intrinsics.fail()) {
+		OutputDebugString("no intrinsic error");
+		return -1;
+	}
+
+	int line = 0;
+	while (intrinsics.good()) {
+		std::vector<std::string> row = csv_read_row(file, ',');
+		intrinsic_array[i] = std::stod(row[1]);
+		line++;
+	}
+
+	double fx_d = intrinsic_array[0];
+	double fy_d = intrinsic_array[1];
+	double cx_d = intrinsic_array[2];
+	double cy_d = intrinsic_array[3];
 
 
 	//read csv file
@@ -143,7 +156,6 @@ int main(void)
 		IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 1);
 		cvDepthImage = cvLoadImage(Depth_name, CV_LOAD_IMAGE_ANYDEPTH);
 		
-
 		unsigned int depth = cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x];
 
 		double x_3d = (label_x - cx_d) * depth / fx_d;
