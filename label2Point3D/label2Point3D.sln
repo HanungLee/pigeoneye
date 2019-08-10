@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29201.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "label2Point3D", "label2Point3D.vcxproj", "{2779D04B-066A-4FE2-A3AB-F1511018D2FF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Debug|x64.ActiveCfg = Debug|x64
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Debug|x64.Build.0 = Debug|x64
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Debug|x86.ActiveCfg = Debug|Win32
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Debug|x86.Build.0 = Debug|Win32
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Release|x64.ActiveCfg = Release|x64
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Release|x64.Build.0 = Release|x64
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Release|x86.ActiveCfg = Release|Win32
+		{2779D04B-066A-4FE2-A3AB-F1511018D2FF}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D151C4EB-4DA6-446B-A151-E4AC66CF6A85}
+	EndGlobalSection
+EndGlobal
