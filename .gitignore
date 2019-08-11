@@ -326,6 +326,8 @@ __pycache__/
 
 *.jpg
 *.mp4
+*.csv
+*.png
 
 # OpenCover UI analysis results
 OpenCover/

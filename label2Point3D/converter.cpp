@@ -104,11 +104,11 @@ std::vector<std::string> csv_read_row(std::istream& file, char delimiter) {
 
 int main(void)
 {
-	std::string datafolder = "./data";
+	std::string datafolder = "../data";
 
 
 	//read calibration parameters
-	std::ifstream intrinsics("./data/intrinsics.csv");
+	std::ifstream intrinsics("../data/intrinsics.csv");
 
 	double intrinsic_array[4];
 	if (intrinsics.fail()) {
@@ -118,9 +118,11 @@ int main(void)
 
 	int line = 0;
 	while (intrinsics.good()) {
-		std::vector<std::string> row = csv_read_row(file, ',');
-		intrinsic_array[i] = std::stod(row[1]);
+		std::vector<std::string> row = csv_read_row(intrinsics, ',');
+		intrinsic_array[line] = std::stod(row[1]);
 		line++;
+
+		std::cout << intrinsic_array[line - 1] << std::endl;
 	}
 
 	double fx_d = intrinsic_array[0];
@@ -128,10 +130,11 @@ int main(void)
 	double cx_d = intrinsic_array[2];
 	double cy_d = intrinsic_array[3];
 
+	
 
 	//read csv file
-	std::ifstream file("./data/label.csv");
-	std::ofstream outputFile("./data/result.csv");
+	std::ifstream file("../data/infrared_data/Label.csv");
+	std::ofstream outputFile("../data/3Dposition.csv");
 
 	if (file.fail()) {
 		OutputDebugString("no file error");
@@ -142,27 +145,74 @@ int main(void)
 
 	while (file.good()) {
 		lineNum++;
+		if (lineNum == 1) { 
+			csv_read_row(file, ','); 
+			continue; 
+		}
 
 		std::vector<std::string> row = csv_read_row(file, ',');
 		std::cout << row[0] << std::endl;
 
 		char* IR_name = const_cast<char*>(row[0].c_str());
-		char* Depth_name = const_cast<char*>(row[0].replace(0, 2, "raw_depth").c_str());
-		
-		int label_x = std::stoi(row[1]);
-		int label_y = std::stoi(row[2]);
+	    std::string temp = const_cast<char*>(row[0].replace(row[0].find("jpg"), 3, "csv").c_str());
+		char* Depth_name = const_cast<char*>(temp.replace(0, 8, "../data/depth_data/depth2xyz_mapper").c_str());
+
+		std::cout << Depth_name << std::endl;
+
+	
+		int label_x = std::stoi(row[2]);
+		int label_y = std::stoi(row[3]);
 
 		// load Depth image
-		IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 1);
-		cvDepthImage = cvLoadImage(Depth_name, CV_LOAD_IMAGE_ANYDEPTH);
+		/*IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
+		cvDepthImage = cvLoadImage(Depth_name, CV_LOAD_IMAGE_UNCHANGED);
+
+		//cv::Mat mat = cv::cvarrToMat(cvDepthImage);
 		
-		unsigned int depth = cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x];
+		float x = (float)CV_IMAGE_ELEM(cvDepthImage, INT16, label_y, label_x * 3);
+		float y = (float)CV_IMAGE_ELEM(cvDepthImage, INT16, label_y, label_x * 3 + 1);
+		float z = (float)CV_IMAGE_ELEM(cvDepthImage, INT16, label_y, label_x * 3 + 2);
+		*/
+
+
+		std::ifstream depth2xyz(Depth_name);
+		int index = label_y * 512 + label_x;
+		int i = 0;
+		while (depth2xyz.good()) {
+			std::vector<std::string> row2 = csv_read_row(depth2xyz, ',');
+
+			if (i == index) {
+				outputFile << row[0] << "," << row2[0] << "," << row2[1] << "," << row2[2] << "\n";
+				break;
+
+			}
+			i++;
+		}
+
+
+
+
+
+		/*
+		double x = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x*cvDepthImage->nChannels];
+		double y = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x * cvDepthImage->nChannels+1];
+
+		double z = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x * cvDepthImage->nChannels+2];
+		*/
+
+		//UINT16 depth = mat.at<UINT16>(label_y, label_x);
+
+
+/*
+		std::cout << depth << std::endl;
 
 		double x_3d = (label_x - cx_d) * depth / fx_d;
 		double y_3d = (label_y - cy_d) * depth / fy_d;
 		double z_3d = depth;
+		*/
 
-		outputFile << IR_name << "," << x_3d << "," << y_3d << "," << z_3d << "\n";
+
+	//	outputFile << row[0] << "," << x << "," << y << "," << z << "\n";
 
 
 	}

@@ -12,6 +12,8 @@
 #include <fstream>
 #include <iostream>
 
+
+
 #include "stdafx.h"
 #include <strsafe.h>
 #include <math.h>
@@ -518,6 +520,8 @@ LRESULT CALLBACK CCoordinateMappingBasics::DlgProc(HWND hWnd, UINT message, WPAR
 	return FALSE;
 }
 
+
+
 /// <summary>
 /// Initializes the default Kinect sensor
 /// </summary>
@@ -539,6 +543,18 @@ HRESULT CCoordinateMappingBasics::InitializeDefaultSensor()
 		if (SUCCEEDED(hr))
 		{
 			hr = m_pKinectSensor->get_CoordinateMapper(&m_pCoordinateMapper);
+			/*
+			CameraIntrinsics intrinsic = CameraIntrinsics();
+			m_pCoordinateMapper->GetDepthCameraIntrinsics(&intrinsic);
+
+			std::ofstream file;
+			file.open("../data/intrinsics.csv");
+			file << "focalLengthX, " << intrinsic.FocalLengthX << "\n";
+			file << "focalLengthY, " << intrinsic.FocalLengthY << "\n";
+			file << "principalPointX, " << intrinsic.PrincipalPointX << "\n";
+			file << "principalPointY, " << intrinsic.PrincipalPointY << "\n";
+			file.close();
+			*/
 		}
 
 		hr = m_pKinectSensor->Open();
@@ -625,12 +641,22 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 
 		if (SUCCEEDED(hr1) && SUCCEEDED(hr2) && SUCCEEDED(hr3) && SUCCEEDED(hr4))
 		{
+			CameraIntrinsics intrinsic = CameraIntrinsics();
+			m_pCoordinateMapper->GetDepthCameraIntrinsics(&intrinsic);
+
+			std::ofstream file;
+			file.open("../data/intrinsics.csv");
+			file << "focalLengthX, " << intrinsic.FocalLengthX << "\n";
+			file << "focalLengthY, " << intrinsic.FocalLengthY << "\n";
+			file << "principalPointX, " << intrinsic.PrincipalPointX << "\n";
+			file << "principalPointY, " << intrinsic.PrincipalPointY << "\n";
+			file.close();
 
 			// Save Original RGB Images
 			{
-				WCHAR szScreenshotPath[MAX_PATH];
-				swprintf(szScreenshotPath, L"./color_data/raw_rgb_%05I64d_%12I64d.bmp", m_nFrameSaverCounter, nTime);
-				SaveBitmapToFile((BYTE*)(pColorBuffer), nColorWidth, nColorHeight, sizeof(RGBQUAD) * 8, szScreenshotPath);
+			//	WCHAR szScreenshotPath[MAX_PATH];
+				//swprintf(szScreenshotPath, L"./color_data/raw_rgb_%05I64d_%12I64d.bmp", m_nFrameSaverCounter, nTime);
+				//SaveBitmapToFile((BYTE*)(pColorBuffer), nColorWidth, nColorHeight, sizeof(RGBQUAD) * 8, szScreenshotPath);
 			}
 			//Save Infrared Images
 			{
@@ -660,9 +686,9 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 					/* cv::imshow("Original Infrared Image", adjMap); */
 
 					std::stringstream InfraredImageFilename;
-					InfraredImageFilename << "./infrared_data/infrared_" <<
+					InfraredImageFilename << "../data/infrared_data/infrared_" <<
 						std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
-						std::setfill('0') << std::setw(12) << nTime << ".png";
+						std::setfill('0') << std::setw(12) << nTime << ".jpg";
 					cv::imwrite(InfraredImageFilename.str().c_str(), adjMap);
 					cvReleaseImage(&cvRawInfraredImage);
 					cvInfraredImage.release();
@@ -672,6 +698,13 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 
 			}
 
+			std::stringstream csvFilename;
+			csvFilename << "../data/depth_data/depth2xyz_mapper_" <<
+				std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
+				std::setfill('0') << std::setw(12) << nTime << ".csv";
+			std::ofstream outputFile(csvFilename.str().c_str());
+
+
 			// Show and Save Depth Images
 			{
 				// end pixel is start + width*height - 1
@@ -679,6 +712,7 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 				const UINT16* pDepthBufferEnd = pBuffer + (cDepthWidth * cDepthHeight);
 				IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 1);
 				IplImage* rgbdMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
+				IplImage* d2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
 				int pixelCounter = 0;
 
 				while (pBuffer < pDepthBufferEnd)
@@ -690,25 +724,43 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 					// maps color to depth coordinate
 					ColorSpacePoint p = m_pColorCoordiantes[pixelCounter];
 					cvSet2D(rgbdMapper, y, x, cvScalar(p.Y, p.X, 0));
+
+					CameraSpacePoint cp = m_pCameraCoordianets[pixelCounter];
+					cvSet2D(d2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
+			//		cvSet2D(d2xyzMapper, y, x, cvScalar(1, 2, 3));
+
+					
+					outputFile  << cp.X << ", " << cp.Y << "," << cp.Z << std::endl;
+
 					
 					++pixelCounter;
 					++pBuffer;
 				}
 
+				outputFile.close();
+				/*
 				std::stringstream rawDepthImageFilename;
-				rawDepthImageFilename << "./depth_data/raw_depth_" << 
+				rawDepthImageFilename << "../data/depth_data/raw_depth_" << 
 					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
 					std::setfill('0') << std::setw(12) << nTime << ".png";
 				cvSaveImage(rawDepthImageFilename.str().c_str(), cvDepthImage);
-
-				std::stringstream convertedDepthImageFilename;
+				*/
+				/*std::stringstream convertedDepthImageFilename;
 				convertedDepthImageFilename << "./depth_data/depth2rgb_mapper_" <<
 					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
 					std::setfill('0') << std::setw(12) << nTime << ".png";
 				cvSaveImage(convertedDepthImageFilename.str().c_str(), rgbdMapper);
-
+				*/
+				/*
+				std::stringstream convertedDepthImageFilename;
+				convertedDepthImageFilename << "../data/depth_data/depth2xyz_mapper_" <<
+					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
+					std::setfill('0') << std::setw(12) << nTime << ".png";
+				cvSaveImage(convertedDepthImageFilename.str().c_str(), d2xyzMapper);
+				*/
 				cvReleaseImage(&cvDepthImage);
 				cvReleaseImage(&rgbdMapper);
+				cvReleaseImage(&d2xyzMapper);
 			}
 
 			// Update frame saver counter

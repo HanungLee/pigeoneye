@@ -9,7 +9,6 @@ function varargout = LabelingTool(varargin)
     if nargin && ischar(varargin{1})
         gui_State.gui_Callback = str2func(varargin{1});
     end
-
     if nargout
         [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
     else
@@ -17,15 +16,12 @@ function varargout = LabelingTool(varargin)
     end
 % End initialization code - DO NOT EDIT
 end
-
 % --- Outputs from this function are returned to the command line.
 function varargout = LabelingTool_OutputFcn(hObject, eventdata, handles) 
     varargout{1} = handles.output;
     
 % initialization code 
 end
-
-
 % --- Executes just before LabelingTool is made visible.
 function LabelingTool_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
@@ -33,27 +29,21 @@ function LabelingTool_OpeningFcn(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);
     
 end
-
-
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
     global idx imgs Visibility Status CoordinateX CoordinateY draw_circle;
-
     dName_img = uigetdir();
     if dName_img ~= 0
         set(handles.text2, 'String', dName_img);   % set path on ui
-
         idx = 1;% current frame index
         CoordinateX(1:10000)= -1; % Array to save each frame Coordinate X
         CoordinateY(1:10000)= -1; % Array to save each frame Coordinate Y
         Status(1:10000)= 0; % Array to save each frame status
         Visibility(1:10000)= 1; % Array to save each frame visibility
         draw_circle = false; % Flag to check if the point be show on axes
-
         % save all files path string array
         imgs = getAllFiles(dName_img);
         guidata(hObject, handles);
-
         
         axes(handles.axes1); % set current axes to axes1
         %show image on axes
@@ -64,13 +54,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
         
         % show path on ui
         set(handles.text3, 'String', imgs{idx});   
-
         %check if Label.csv in this path, if yes, load and show the data 
         if exist(strcat(dName_img,'/Label.csv'), 'file') == 2 % value 2 means file exist
             fid = fopen(strcat(dName_img,'/Label.csv'));
             out = textscan(fid,'%s%d%f%f%d','Headerlines',1,'delimiter',',');
             fclose(fid);
-
             for i = 1:size(imgs)
                 Visibility(i) = out{2}(i);
                 CoordinateX(i) = out{3}(i);
@@ -79,22 +67,16 @@ function pushbutton1_Callback(hObject, eventdata, handles)
             end
         end
     end
-
 end
-
-
 % Get mouse click coordinates function, tutorial: https://stackoverflow.com/questions/14684577/matlab-how-to-get-mouse-click-coordinates/14685313
 function ImageClickCallback ( objectHandle , eventData)
-
     global idx CoordinateX CoordinateY draw_circle Circle
-
     axesHandle  = get(objectHandle,'Parent');
     
     % get mouse click coordinates x, y
     coordinates = get(axesHandle,'CurrentPoint');  
     x = coordinates(1,1);
     y = coordinates(1,2);
-
     % save x, y to global variable Coordinate
     CoordinateX(idx) = round(x);
     CoordinateY(idx) = round(y);
@@ -108,14 +90,10 @@ function ImageClickCallback ( objectHandle , eventData)
     %draw the circle on axes
     Circle = viscircles([x y],radius,'Color','r');
     draw_circle = true;
-
 end
-
-
-
 % get all *.jpg file function, refer to https://cn.mathworks.com/matlabcentral/fileexchange/48238-nonstationary-extreme-value-analysis--neva--toolbox?focused=5028815&tab=function
 function fileList = getAllFiles(dirName)
-    dirData = dir(strcat(dirName,'/*.jpg'));   
+    dirData = dir(strcat(dirName,'/*.png'));   
     dirIndex = [dirData.isdir]; 
     fileList = {dirData(~dirIndex).name}';  
     
@@ -132,12 +110,8 @@ function fileList = getAllFiles(dirName)
     end
     
 end
-
-
-
 % --- Executes on key press with focus on figure1
 function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
-
     global idx imgs draw_circle CoordinateX CoordinateY Circle Visibility Status 
     
     switch eventdata.Key
@@ -151,13 +125,10 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 imageHandle = imshow(imgs{idx});
                 % assign the ButtonDownFcn to the image handle
                 set(imageHandle,'ButtonDownFcn',@ImageClickCallback);
-
                 % default all of radio buttons is enable
                 set(handles.frying, 'Enable', 'on');   
                 set(handles.hit, 'Enable', 'on');   
                 set(handles.bouncing, 'Enable', 'on');   
-
-
                 if Visibility(idx) == 0 % disable all of radio buttons
                     set(handles.no_ball, 'Value', 1);
                     set(handles.frying, 'Enable', 'off');   
@@ -170,7 +141,6 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 elseif Visibility(idx) == 3 % set occluded_ball radio button to 1
                     set(handles.occluded_ball, 'Value', 1);
                 end
-
                 if Status(idx) == 0 % set frying radio button to 1
                     set(handles.frying, 'Value', 1);
                 elseif Status(idx) == 1 % set hit radio button to 1
@@ -178,9 +148,7 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 elseif Status(idx) == 2 % set bouncing radio button to 1
                     set(handles.bouncing, 'Value', 1);
                 end
-
                 set(handles.text3, 'String', imgs{idx}); % show path on text3
-
                 if CoordinateX(idx)==-1 && CoordinateY(idx)==-1
                     set(handles.text3, 'ForegroundColor', 'r'); % for reminding, if the frame do not be labeled, the path will be red.
                     draw_circle = false;
@@ -190,11 +158,9 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                     draw_circle = true;
                 end
             end
-
         case 'rightarrow' % show next frame 
             [m,n] = size(imgs); % get images size
             if idx < m % idx range should be 1~lenght(imgs)
-
                 idx = idx + 1;
                 guidata(hObject, handles);
                 % set current axes to axes1
@@ -203,12 +169,10 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 imageHandle = imshow(imgs{idx});
                 % assign the ButtonDownFcn to the image handle
                 set(imageHandle,'ButtonDownFcn',@ImageClickCallback);
-
                 % default all of radio buttons is enable
                 set(handles.frying, 'Enable', 'on');   
                 set(handles.hit, 'Enable', 'on');   
                 set(handles.bouncing, 'Enable', 'on');   
-
                 if Visibility(idx) == 0 % disable all of radio buttons
                     set(handles.no_ball, 'Value', 1);
                     set(handles.frying, 'Enable', 'off');   
@@ -221,7 +185,6 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 elseif Visibility(idx) == 3 % set occluded_ball radio button to 1
                     set(handles.occluded_ball, 'Value', 1);
                 end
-
                 if Status(idx) == 0 % set frying radio button to 1
                     set(handles.frying, 'Value', 1);
                 elseif Status(idx) == 1 % set hit radio button to 1
@@ -229,8 +192,6 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
                 elseif Status(idx) == 2 % set bouncing radio button to 1
                     set(handles.bouncing, 'Value', 1);
                 end
-
-
                 set(handles.text3, 'String', imgs{idx}); % show path on text3
                 if CoordinateX(idx)==-1 && CoordinateY(idx)==-1
                     set(handles.text3, 'ForegroundColor', 'r'); % for reminding, if the frame do not be labeled, the path will be as red.
@@ -244,11 +205,8 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
     end
     
 end
-
-
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
-
     global imgs CoordinateX CoordinateY Visibility Status 
     
     % for reminding, check if there have Coordinates dont be labeled
@@ -277,16 +235,11 @@ function pushbutton2_Callback(hObject, eventdata, handles)
                 fprintf(fid, '%s,0,,,\n', fileName);
             else
                 fprintf(fid, '%s,%d,%d,%d,%d\n', fileName, Visibility(i), CoordinateX(i), CoordinateY(i), Status(i));
-
             end
         end
         fclose(fid);
     end
-
-
 end
-
-
 % --- Executes when selected object is changed in VisibilityGroup.
 function VisibilityGroup_SelectionChangedFcn(hObject, eventdata, handles)
     global idx Visibility 
@@ -295,7 +248,6 @@ function VisibilityGroup_SelectionChangedFcn(hObject, eventdata, handles)
     set(handles.frying, 'Enable', 'on');   
     set(handles.hit, 'Enable', 'on');   
     set(handles.bouncing, 'Enable', 'on');   
-
     switch(get(eventdata.NewValue,'Tag'));
         case 'no_ball' % turn all of radiobutton as disable
             Visibility(idx) = 0;
@@ -311,8 +263,6 @@ function VisibilityGroup_SelectionChangedFcn(hObject, eventdata, handles)
     end
     
 end
-
-
 % --- Executes when selected object is changed in StatusGroup.
 function StatusGroup_SelectionChangedFcn(hObject, eventdata, handles)
     global idx Status 
@@ -325,9 +275,6 @@ function StatusGroup_SelectionChangedFcn(hObject, eventdata, handles)
             Status(idx)  = 2;
     end
 end
-
-
-
 % --- Executes on key press with focus on figure1 or any of its controls.
 function figure1_KeyPressFcn(hObject, eventdata, handles)
 end
