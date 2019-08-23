@@ -263,7 +263,7 @@ void CCoordinateMappingBasics::Update()
 	IMultiSourceFrame* pMultiSourceFrame = NULL;
 	IDepthFrame* pDepthFrame = NULL;
 	IInfraredFrame* pInfraredFrame = NULL;
-	IColorFrame* pColorFrame = NULL;
+	//IColorFrame* pColorFrame = NULL;
 	IBodyFrame* pBodyFrame = NULL;
 
 	HRESULT hr = m_pMultiSourceFrameReader->AcquireLatestFrame(&pMultiSourceFrame);
@@ -280,7 +280,7 @@ void CCoordinateMappingBasics::Update()
 
 		SafeRelease(pDepthFrameReference);
 	}
-
+	/*
 	if (SUCCEEDED(hr))
 	{
 		IColorFrameReference* pColorFrameReference = NULL;
@@ -293,6 +293,8 @@ void CCoordinateMappingBasics::Update()
 
 		SafeRelease(pColorFrameReference);
 	}
+	*/
+
 	if (SUCCEEDED(hr))
 	{
 		IInfraredFrameReference* pInfraredFrameReference = NULL;
@@ -303,6 +305,7 @@ void CCoordinateMappingBasics::Update()
 		}
 		SafeRelease(pInfraredFrameReference);
 	}
+
 	if (SUCCEEDED(hr))
 	{
 		INT64 nDepthTime = 0;
@@ -312,12 +315,13 @@ void CCoordinateMappingBasics::Update()
 		UINT nDepthBufferSize = 0;
 		UINT16 *pDepthBuffer = NULL;
 
-		IFrameDescription* pColorFrameDescription = NULL;
+		/*IFrameDescription* pColorFrameDescription = NULL;
 		int nColorWidth = 0;
 		int nColorHeight = 0;
 		ColorImageFormat imageFormat = ColorImageFormat_None;
 		UINT nColorBufferSize = 0;
 		RGBQUAD *pColorBuffer = NULL;
+		*/
 
 		IFrameDescription* pInfraredFrameDescription = NULL;
 		int nInfraredWidth = 0;
@@ -351,7 +355,7 @@ void CCoordinateMappingBasics::Update()
 		}
 
 		// get color frame data
-
+		/*
 		if (SUCCEEDED(hr))
 		{
 			hr = pColorFrame->get_FrameDescription(&pColorFrameDescription);
@@ -388,7 +392,7 @@ void CCoordinateMappingBasics::Update()
 			{
 				hr = E_FAIL;
 			}
-		}
+		}*/
 		// get Infared frame data
 		if (SUCCEEDED(hr))
 		{
@@ -414,17 +418,16 @@ void CCoordinateMappingBasics::Update()
 
 		if (SUCCEEDED(hr))
 		{
-			ProcessFrame(nDepthTime, pDepthBuffer, nDepthWidth, nDepthHeight, 
-				pColorBuffer, nColorWidth, nColorHeight, pInfraredBuffer);
+			ProcessFrame(nDepthTime, pDepthBuffer, nDepthWidth, nDepthHeight, pInfraredBuffer);
 		}
 
 		SafeRelease(pDepthFrameDescription);
-		SafeRelease(pColorFrameDescription);
+		//SafeRelease(pColorFrameDescription);
 		SafeRelease(pInfraredFrameDescription);
 	}
 
 	SafeRelease(pDepthFrame);
-	SafeRelease(pColorFrame);
+	//SafeRelease(pColorFrame);
 	SafeRelease(pInfraredFrame);
 	SafeRelease(pMultiSourceFrame);
 
@@ -562,7 +565,8 @@ HRESULT CCoordinateMappingBasics::InitializeDefaultSensor()
 		if (SUCCEEDED(hr))
 		{
 			hr = m_pKinectSensor->OpenMultiSourceFrameReader(
-				FrameSourceTypes::FrameSourceTypes_Depth | FrameSourceTypes::FrameSourceTypes_Color |FrameSourceTypes::FrameSourceTypes_Infrared| FrameSourceTypes::FrameSourceTypes_Body,
+			//	FrameSourceTypes::FrameSourceTypes_Depth | FrameSourceTypes::FrameSourceTypes_Color |FrameSourceTypes::FrameSourceTypes_Infrared| FrameSourceTypes::FrameSourceTypes_Body,
+				FrameSourceTypes::FrameSourceTypes_Depth |FrameSourceTypes::FrameSourceTypes_Infrared,
 				&m_pMultiSourceFrameReader);
 		}
 	}
@@ -582,16 +586,12 @@ HRESULT CCoordinateMappingBasics::InitializeDefaultSensor()
 /// <param name="pDepthBuffer">pointer to depth frame data</param>
 /// <param name="nDepthWidth">width (in pixels) of input depth image data</param>
 /// <param name="nDepthHeight">height (in pixels) of input depth image data</param>
-/// <param name="pColorBuffer">pointer to color frame data</param>
-/// <param name="nColorWidth">width (in pixels) of input color image data</param>
-/// <param name="nColorHeight">height (in pixels) of input color image data</param>
 /// <param name="pBodyIndexBuffer">pointer to body index frame data</param>
 /// <param name="nBodyIndexWidth">width (in pixels) of input body index data</param>
 /// <param name="nBodyIndexHeight">height (in pixels) of input body index data</param>
 /// </summary>
 void CCoordinateMappingBasics::ProcessFrame(INT64 nTime, 
 											const UINT16* pDepthBuffer, int nDepthWidth, int nDepthHeight, 
-											const RGBQUAD* pColorBuffer, int nColorWidth, int nColorHeight,
 											const UINT16* pInfraredBuffer)
 {
 	if (m_hWnd)
@@ -629,17 +629,18 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 	// Make sure we've received valid data
 	if (m_pCoordinateMapper && m_pDepthCoordinates && m_pOutputRGBX && 
 		pDepthBuffer && (nDepthWidth == cDepthWidth) && (nDepthHeight == cDepthHeight) && 
-		pColorBuffer && (nColorWidth == cColorWidth) && (nColorHeight == cColorHeight) && 
+		//pColorBuffer && (nColorWidth == cColorWidth) && (nColorHeight == cColorHeight) && 
 		pInfraredBuffer)
 	{
-		HRESULT hr1 = m_pCoordinateMapper->MapDepthFrameToColorSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nDepthWidth * nDepthHeight, m_pColorCoordiantes);
+	//	HRESULT hr1 = m_pCoordinateMapper->MapDepthFrameToColorSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nDepthWidth * nDepthHeight, m_pColorCoordiantes);
 
 		HRESULT hr2 = m_pCoordinateMapper->MapDepthFrameToCameraSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nDepthWidth * nDepthHeight, m_pCameraCoordianets);
-		HRESULT hr3 = m_pCoordinateMapper->MapCameraPointsToColorSpace(nDepthWidth * nDepthHeight, m_pCameraCoordianets, nDepthWidth * nDepthHeight, m_pColorCoordiantes);
+		//HRESULT hr3 = m_pCoordinateMapper->MapCameraPointsToColorSpace(nDepthWidth * nDepthHeight, m_pCameraCoordianets, nDepthWidth * nDepthHeight, m_pColorCoordiantes);
 
-		HRESULT hr4 = m_pCoordinateMapper->MapColorFrameToDepthSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nColorWidth * nColorHeight, m_pDepthCoordinates);
+		//HRESULT hr4 = m_pCoordinateMapper->MapColorFrameToDepthSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nColorWidth * nColorHeight, m_pDepthCoordinates);
 
-		if (SUCCEEDED(hr1) && SUCCEEDED(hr2) && SUCCEEDED(hr3) && SUCCEEDED(hr4))
+		//if (SUCCEEDED(hr1) && SUCCEEDED(hr2) && SUCCEEDED(hr3) && SUCCEEDED(hr4))
+		if (SUCCEEDED(hr2))
 		{
 			CameraIntrinsics intrinsic = CameraIntrinsics();
 			m_pCoordinateMapper->GetDepthCameraIntrinsics(&intrinsic);
@@ -698,12 +699,13 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 
 			}
 
+			/*
 			std::stringstream csvFilename;
 			csvFilename << "../data/depth_data/depth2xyz_mapper_" <<
 				std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
 				std::setfill('0') << std::setw(12) << nTime << ".csv";
 			std::ofstream outputFile(csvFilename.str().c_str());
-
+			*/
 
 			// Show and Save Depth Images
 			{
@@ -711,8 +713,11 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 				const UINT16* pBuffer = pDepthBuffer;
 				const UINT16* pDepthBufferEnd = pBuffer + (cDepthWidth * cDepthHeight);
 				IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 1);
-				IplImage* rgbdMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
-				IplImage* d2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
+				//IplImage* rgbdMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
+				IplImage* d2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_32F, 3);
+
+				//cv::Mat cvd2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), CV_32F, 3);
+
 				int pixelCounter = 0;
 
 				while (pBuffer < pDepthBufferEnd)
@@ -722,22 +727,41 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 					cvSet2D(cvDepthImage, y, x, cvScalar(*pBuffer >> 3));
 
 					// maps color to depth coordinate
-					ColorSpacePoint p = m_pColorCoordiantes[pixelCounter];
-					cvSet2D(rgbdMapper, y, x, cvScalar(p.Y, p.X, 0));
+					//ColorSpacePoint p = m_pColorCoordiantes[pixelCounter];
+					//cvSet2D(rgbdMapper, y, x, cvScalar(p.Y, p.X, 0));
 
 					CameraSpacePoint cp = m_pCameraCoordianets[pixelCounter];
-					cvSet2D(d2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
-			//		cvSet2D(d2xyzMapper, y, x, cvScalar(1, 2, 3));
+
+					if (cp.X < INT_MIN) {
+						cp.X = 0;
+					}
+					if (cp.Y < INT_MIN) {
+						cp.Y = 0;
+					}
+					if (cp.Z < INT_MIN) {
+						cp.Z = 0;
+					}
+
+			//		cvSet2D(d2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
+				//	cvSet2D(d2xyzMapper, y, x, cvScalar((float)255, 120.2222222, 0));
+					cvSet2D(d2xyzMapper, y, x, cvScalar(1, 2, 3));
+
+				//	cvSet2D(&cvd2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
+				///	cvd2xyzMapper.at<cv::Vec3b>(y, x)[0] = cp.X;
+				//	cvd2xyzMapper.at<cv::Vec3b>(y, x)[1] = cp.Y;
+			//		cvd2xyzMapper.at<cv::Vec3b>(y, x)[2] = cp.Z;
+//
+
 
 					
-					outputFile  << cp.X << ", " << cp.Y << "," << cp.Z << std::endl;
+					//outputFile  << cp.X << ", " << cp.Y << "," << cp.Z << std::endl;
 
 					
 					++pixelCounter;
 					++pBuffer;
 				}
 
-				outputFile.close();
+				//outputFile.close();
 				/*
 				std::stringstream rawDepthImageFilename;
 				rawDepthImageFilename << "../data/depth_data/raw_depth_" << 
@@ -751,15 +775,35 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 					std::setfill('0') << std::setw(12) << nTime << ".png";
 				cvSaveImage(convertedDepthImageFilename.str().c_str(), rgbdMapper);
 				*/
-				/*
+				
 				std::stringstream convertedDepthImageFilename;
 				convertedDepthImageFilename << "../data/depth_data/depth2xyz_mapper_" <<
 					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
 					std::setfill('0') << std::setw(12) << nTime << ".png";
 				cvSaveImage(convertedDepthImageFilename.str().c_str(), d2xyzMapper);
+				//cv::imwrite(convertedDepthImageFilename.str().c_str(), cvd2xyzMapper);
+
+
+				std::stringstream convertedDepthImageFilename2;
+				convertedDepthImageFilename << "../data/depth_data/depth2xyz_mapper_" <<
+					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
+					std::setfill('0') << std::setw(12) << nTime << ".yml";
+				cv::FileStorage fs(convertedDepthImageFilename2.str().c_str(), cv::FileStorage::WRITE);
+				cv::Mat mapperMat = cv::cvarrToMat(d2xyzMapper);
+				fs << "mat" << mapperMat;
+				
+
+
+				/*std::stringstream csvFilename;
+				csvFilename << "../data/depth_data/depth2xyz_mapper_" <<
+					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
+					std::setfill('0') << std::setw(12) << nTime << ".bmp";
+			
+				SaveBitmapToFile((BYTE*)(d2xyzMapper), nDepthWidth, nDepthHeight, sizeof(RGBQUAD) * 8, (LPCWSTR )csvFilename.str().c_str());
 				*/
+
 				cvReleaseImage(&cvDepthImage);
-				cvReleaseImage(&rgbdMapper);
+				//cvReleaseImage(&rgbdMapper);
 				cvReleaseImage(&d2xyzMapper);
 			}
 

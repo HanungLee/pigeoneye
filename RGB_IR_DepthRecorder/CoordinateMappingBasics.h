@@ -116,8 +116,7 @@ private:
     /// <param name="nBodyIndexHeight">height (in pixels) of input body index data</param>
     /// </summary>
     void                    ProcessFrame(INT64 nTime, 
-                                         const UINT16* pDepthBuffer, int nDepthHeight, int nDepthWidth, 
-                                         const RGBQUAD* pColorBuffer, int nColorWidth, int nColorHeight, const UINT16* pInfraredBuffer);
+                                         const UINT16* pDepthBuffer, int nDepthHeight, int nDepthWidth,  const UINT16* pInfraredBuffer);
 
     /// <summary>
     /// Set the status bar message
