@@ -7,6 +7,7 @@
 #include <sstream>
 #include <istream>
 #include <fstream>
+
 #include <iomanip>
 #include <vector>
 #include <string>
@@ -17,57 +18,6 @@ static const int        cDepthHeight = 424;
 static const int        cColorWidth = 1920;
 static const int        cColorHeight = 1080;
 
-
-/*
-std::vector<std::string> ListDirectoryContents(const char* sDir, char* filename_pattern)
-{
-	std::vector<std::string> allfiles;
-
-	WIN32_FIND_DATA fdFile;
-	HANDLE hFind = NULL;
-
-	char sPath[2048];
-
-	//Specify a file mask. *.* = We want everything!
-	sprintf(sPath, "%s\\*.*", sDir);
-
-	if ((hFind = FindFirstFile(sPath, &fdFile)) == INVALID_HANDLE_VALUE)
-	{
-		printf("Path not found: [%s]\n", sDir);
-		//return false;
-		return allfiles;
-	}
-
-	do
-	{
-		//Find first file will always return "."
-		//    and ".." as the first two directories.
-		if (strcmp(fdFile.cFileName, ".") != 0
-			&& strcmp(fdFile.cFileName, "..") != 0)
-		{
-			//Build up our file path using the passed in
-			//  [sDir] and the file/foldername we just found:
-			sprintf(sPath, "%s\\%s", sDir, fdFile.cFileName);
-
-			////Is the entity a File or Folder?
-			//if(fdFile.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
-			//{
-			//    printf("Directory: %s\n", sPath);
-			//    ListDirectoryContents(sPath); //Recursion, I love it!
-			//}
-			//else{
-			//    printf("File: %s\n", sPath);
-			//}
-			if (strstr(sPath, filename_pattern))
-				allfiles.push_back(sPath);
-		}
-	} while (FindNextFile(hFind, &fdFile)); //Find the next file.
-
-	FindClose(hFind); //Always, Always, clean things up!
-
-	return allfiles;
-}
-*/
 
 std::vector<std::string> csv_read_row(std::istream& file, char delimiter) {
 	std::stringstream ss;
@@ -110,26 +60,26 @@ int main(void)
 	//read calibration parameters
 	std::ifstream intrinsics("../data/intrinsics.csv");
 
-	double intrinsic_array[4];
+	/*double intrinsic_array[4];
 	if (intrinsics.fail()) {
 		OutputDebugString("no intrinsic error");
 		return -1;
-	}
+	}*/
 
-	int line = 0;
+	/*int line = 0;
 	while (intrinsics.good()) {
 		std::vector<std::string> row = csv_read_row(intrinsics, ',');
 		intrinsic_array[line] = std::stod(row[1]);
 		line++;
 
 		std::cout << intrinsic_array[line - 1] << std::endl;
-	}
+	}*/
 
-	double fx_d = intrinsic_array[0];
+/*	double fx_d = intrinsic_array[0];
 	double fy_d = intrinsic_array[1];
 	double cx_d = intrinsic_array[2];
 	double cy_d = intrinsic_array[3];
-
+	*/
 	
 
 	//read csv file
@@ -154,32 +104,45 @@ int main(void)
 		std::cout << row[0] << std::endl;
 
 		char* IR_name = const_cast<char*>(row[0].c_str());
-	    std::string temp = const_cast<char*>(row[0].replace(row[0].find("jpg"), 3, "png").c_str());
+	    std::string temp = const_cast<char*>(row[0].replace(row[0].find("jpg"), 6, "binary").c_str());
 		char* Depth_name = const_cast<char*>(temp.replace(0, 8, "../data/depth_data/depth2xyz_mapper").c_str());
 
 		std::cout << Depth_name << std::endl;
 
-	
 		int label_x = std::stoi(row[2]);
 		int label_y = std::stoi(row[3]);
 
+		CvScalar* pointArray = (CvScalar*)malloc(sizeof(CvScalar) * cDepthHeight * cDepthWidth);
+
+		std::ifstream in(Depth_name, std::ios::in | std::ios::binary);
+		OutputDebugString("read start");
+		in.read((char*) pointArray, sizeof(CvScalar) * cDepthHeight * cDepthWidth);
+		OutputDebugString("read end");
+		outputFile << row[0] << "," << pointArray[label_y*cDepthWidth + label_x].val[0] << "," << pointArray[label_y * cDepthWidth + label_x].val[1] << "," << pointArray[label_y * cDepthWidth + label_x].val[2] << "\n";
+		in.close();
+
+		free(pointArray);
+
 		// load Depth image
+		/*
 		IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
 		cvDepthImage = cvLoadImage(Depth_name, CV_LOAD_IMAGE_UNCHANGED);
 		
 		int x = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3);
 		int y = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3 + 1);
 		int z = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3 + 2);
+		*/
 		
-		
-		/*cv::Mat* cvDepthImage2 = cvCreateImage(cDepthHeight, cDepthWidth, CV_32FC3);
+		/*
+		cv::Mat* cvDepthImage2 = cvCreateImage(cDepthHeight, cDepthWidth, CV_32FC3);
 		cvDepthImage2 = cvLoadImage(Depth_name, CV_LOAD_IMAGE_UNCHANGED);
 		double x = cvGet2D(cvDepthImage2, label_y, label_x).val[0];
 		double y = cvGet2D(cvDepthImage2, label_y, label_x).val[1];
 		double z = cvGet2D(cvDepthImage2, label_y, label_x).val[2];
 		*/ 
 
-		/*cv::FileStorage fs2(Depth_name, cv::FileStorage::READ);
+		/*
+		cv::FileStorage fs2(Depth_name, cv::FileStorage::READ);
 		cv::Mat mat;
 		fs2["yourMat"] >> mat;
 
@@ -190,7 +153,8 @@ int main(void)
 
 
 
-		/*std::ifstream depth2xyz(Depth_name);
+		/*
+		std::ifstream depth2xyz(Depth_name);
 		int index = label_y * 512 + label_x;
 		int i = 0;
 		while (depth2xyz.good()) {
@@ -202,7 +166,8 @@ int main(void)
 
 			}
 			i++;
-		}*/
+		}
+		*/
 
 
 
@@ -227,7 +192,7 @@ int main(void)
 		*/
 
 
-		outputFile << row[0] << "," << x << "," << y << "," << z << "\n";
+		//outputFile << row[0] << "," << pointArray[] << "," << y << "," << z << "\n";
 
 
 	}

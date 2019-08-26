@@ -642,7 +642,7 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 		//if (SUCCEEDED(hr1) && SUCCEEDED(hr2) && SUCCEEDED(hr3) && SUCCEEDED(hr4))
 		if (SUCCEEDED(hr2))
 		{
-			CameraIntrinsics intrinsic = CameraIntrinsics();
+			/*CameraIntrinsics intrinsic = CameraIntrinsics();
 			m_pCoordinateMapper->GetDepthCameraIntrinsics(&intrinsic);
 
 			std::ofstream file;
@@ -652,7 +652,7 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 			file << "principalPointX, " << intrinsic.PrincipalPointX << "\n";
 			file << "principalPointY, " << intrinsic.PrincipalPointY << "\n";
 			file.close();
-
+			*/
 			// Save Original RGB Images
 			{
 			//	WCHAR szScreenshotPath[MAX_PATH];
@@ -715,6 +715,8 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 				IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 1);
 				//IplImage* rgbdMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
 				IplImage* d2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_32F, 3);
+				
+				CvScalar* pointArray = (CvScalar *)malloc(sizeof(CvScalar) * cDepthHeight * cDepthWidth);
 
 				//cv::Mat cvd2xyzMapper = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), CV_32F, 3);
 
@@ -732,7 +734,9 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 
 					CameraSpacePoint cp = m_pCameraCoordianets[pixelCounter];
 
-					if (cp.X < INT_MIN) {
+					pointArray[pixelCounter] = cvScalar(cp.X, cp.Y, cp.Z);
+
+					/*if (cp.X < INT_MIN) {
 						cp.X = 0;
 					}
 					if (cp.Y < INT_MIN) {
@@ -740,11 +744,11 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 					}
 					if (cp.Z < INT_MIN) {
 						cp.Z = 0;
-					}
+					}*/
 
-			//		cvSet2D(d2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
+					cvSet2D(d2xyzMapper, y, x, cvScalar((double)cp.X, (double)cp.Y, (double)cp.Z));
 				//	cvSet2D(d2xyzMapper, y, x, cvScalar((float)255, 120.2222222, 0));
-					cvSet2D(d2xyzMapper, y, x, cvScalar(1, 2, 3));
+				///	cvSet2D(d2xyzMapper, y, x, cvScalar(1, 200.111111, 3));
 
 				//	cvSet2D(&cvd2xyzMapper, y, x, cvScalar(cp.X, cp.Y, cp.Z));
 				///	cvd2xyzMapper.at<cv::Vec3b>(y, x)[0] = cp.X;
@@ -779,20 +783,26 @@ void CCoordinateMappingBasics::ProcessFrame(INT64 nTime,
 				std::stringstream convertedDepthImageFilename;
 				convertedDepthImageFilename << "../data/depth_data/depth2xyz_mapper_" <<
 					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
-					std::setfill('0') << std::setw(12) << nTime << ".png";
-				cvSaveImage(convertedDepthImageFilename.str().c_str(), d2xyzMapper);
+					std::setfill('0') << std::setw(12) << nTime << ".binary";
+				//cvSaveImage(convertedDepthImageFilename.str().c_str(), d2xyzMapper);
 				//cv::imwrite(convertedDepthImageFilename.str().c_str(), cvd2xyzMapper);
 
+				auto myfile = std::fstream(convertedDepthImageFilename.str().c_str(), std::ios::out | std::ios::binary);
+				myfile.write((char*)& pointArray[0], sizeof(CvScalar)* cDepthHeight* cDepthWidth);
+				myfile.close();
+				
+				free(pointArray);
 
-				std::stringstream convertedDepthImageFilename2;
+				/*std::stringstream convertedDepthImageFilename2;
 				convertedDepthImageFilename << "../data/depth_data/depth2xyz_mapper_" <<
 					std::setfill('0') << std::setw(5) << m_nFrameSaverCounter << '_' <<
 					std::setfill('0') << std::setw(12) << nTime << ".yml";
 				cv::FileStorage fs(convertedDepthImageFilename2.str().c_str(), cv::FileStorage::WRITE);
 				cv::Mat mapperMat = cv::cvarrToMat(d2xyzMapper);
 				fs << "mat" << mapperMat;
-				
+				*/
 
+				
 
 				/*std::stringstream csvFilename;
 				csvFilename << "../data/depth_data/depth2xyz_mapper_" <<
