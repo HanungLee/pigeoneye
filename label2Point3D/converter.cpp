@@ -60,28 +60,6 @@ int main(void)
 	//read calibration parameters
 	std::ifstream intrinsics("../data/intrinsics.csv");
 
-	/*double intrinsic_array[4];
-	if (intrinsics.fail()) {
-		OutputDebugString("no intrinsic error");
-		return -1;
-	}*/
-
-	/*int line = 0;
-	while (intrinsics.good()) {
-		std::vector<std::string> row = csv_read_row(intrinsics, ',');
-		intrinsic_array[line] = std::stod(row[1]);
-		line++;
-
-		std::cout << intrinsic_array[line - 1] << std::endl;
-	}*/
-
-/*	double fx_d = intrinsic_array[0];
-	double fy_d = intrinsic_array[1];
-	double cx_d = intrinsic_array[2];
-	double cy_d = intrinsic_array[3];
-	*/
-	
-
 	//read csv file
 	std::ifstream file("../data/infrared_data/Label.csv");
 	std::ofstream outputFile("../data/3Dposition.csv");
@@ -92,6 +70,10 @@ int main(void)
 	}
 
 	int lineNum = 0;
+
+	CvScalar reference;
+
+
 
 	while (file.good()) {
 		lineNum++;
@@ -118,81 +100,17 @@ int main(void)
 		OutputDebugString("read start");
 		in.read((char*) pointArray, sizeof(CvScalar) * cDepthHeight * cDepthWidth);
 		OutputDebugString("read end");
-		outputFile << row[0] << "," << pointArray[label_y*cDepthWidth + label_x].val[0] << "," << pointArray[label_y * cDepthWidth + label_x].val[1] << "," << pointArray[label_y * cDepthWidth + label_x].val[2] << "\n";
-		in.close();
 
-		free(pointArray);
-
-		// load Depth image
-		/*
-		IplImage* cvDepthImage = cvCreateImage(cvSize(cDepthWidth, cDepthHeight), IPL_DEPTH_16U, 3);
-		cvDepthImage = cvLoadImage(Depth_name, CV_LOAD_IMAGE_UNCHANGED);
-		
-		int x = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3);
-		int y = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3 + 1);
-		int z = CV_IMAGE_ELEM(cvDepthImage, int, label_y, label_x * 3 + 2);
-		*/
-		
-		/*
-		cv::Mat* cvDepthImage2 = cvCreateImage(cDepthHeight, cDepthWidth, CV_32FC3);
-		cvDepthImage2 = cvLoadImage(Depth_name, CV_LOAD_IMAGE_UNCHANGED);
-		double x = cvGet2D(cvDepthImage2, label_y, label_x).val[0];
-		double y = cvGet2D(cvDepthImage2, label_y, label_x).val[1];
-		double z = cvGet2D(cvDepthImage2, label_y, label_x).val[2];
-		*/ 
-
-		/*
-		cv::FileStorage fs2(Depth_name, cv::FileStorage::READ);
-		cv::Mat mat;
-		fs2["yourMat"] >> mat;
-
-		double x = mat.at<cv::Vec3b>(label_y, label_x)[0] ;
-		double y = mat.at<cv::Vec3b>(label_y, label_x)[1];
-		double z = mat.at<cv::Vec3b>(label_y, label_x)[2];
-		*/
-
-
-
-		/*
-		std::ifstream depth2xyz(Depth_name);
-		int index = label_y * 512 + label_x;
-		int i = 0;
-		while (depth2xyz.good()) {
-			std::vector<std::string> row2 = csv_read_row(depth2xyz, ',');
-
-			if (i == index) {
-				outputFile << row[0] << "," << row2[0] << "," << row2[1] << "," << row2[2] << "\n";
-				break;
-
-			}
-			i++;
+		if (lineNum == 2) {
+			reference = pointArray[label_y * cDepthWidth + label_x];
 		}
-		*/
 
+		CvScalar point = pointArray[label_y * cDepthWidth + label_x];
 
-
-
-
-		/*
-		double x = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x*cvDepthImage->nChannels];
-		double y = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x * cvDepthImage->nChannels+1];
-
-		double z = (double)cvDepthImage->imageData[label_y * cvDepthImage->widthStep + label_x * cvDepthImage->nChannels+2];
-		*/
-
-		//UINT16 depth = mat.at<UINT16>(label_y, label_x);
-
-
-/*
-		std::cout << depth << std::endl;
-
-		double x_3d = (label_x - cx_d) * depth / fx_d;
-		double y_3d = (label_y - cy_d) * depth / fy_d;
-		double z_3d = depth;
-		*/
-
-
-		//outputFile << row[0] << "," << pointArray[] << "," << y << "," << z << "\n";
+		outputFile << row[0] << "," << point.val[0] << "," << point.val[1] << "," << point.val[2] << ","  << point.val[0] - reference.val[0] << "," << point.val[1] - reference.val[1] << "," << point.val[2] - reference.val[2] << "\n";
+		in.close();
+		
+		free(pointArray);
 
 
 	}
