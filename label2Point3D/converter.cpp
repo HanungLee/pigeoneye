@@ -91,23 +91,31 @@ int main(void)
 
 		std::cout << Depth_name << std::endl;
 
-		int label_x = std::stoi(row[2]);
-		int label_y = std::stoi(row[3]);
-
 		CvScalar* pointArray = (CvScalar*)malloc(sizeof(CvScalar) * cDepthHeight * cDepthWidth);
 
 		std::ifstream in(Depth_name, std::ios::in | std::ios::binary);
 		OutputDebugString("read start");
-		in.read((char*) pointArray, sizeof(CvScalar) * cDepthHeight * cDepthWidth);
+		in.read((char*)pointArray, sizeof(CvScalar) * cDepthHeight * cDepthWidth);
 		OutputDebugString("read end");
 
-		if (lineNum == 2) {
-			reference = pointArray[label_y * cDepthWidth + label_x];
+		int visibility = std::stoi(row[1]);
+		if (visibility) {
+
+			int label_x = std::stoi(row[2]);
+			int label_y = std::stoi(row[3]);
+
+			if (lineNum == 2) {
+				reference = pointArray[label_y * cDepthWidth + label_x];
+			}
+
+			CvScalar point = pointArray[label_y * cDepthWidth + label_x];
+
+			outputFile << row[0] << "," << "1," << point.val[0] << "," << point.val[1] << "," << point.val[2] << "," << point.val[0] - reference.val[0] << "," << point.val[1] - reference.val[1] << "," << point.val[2] - reference.val[2] << "\n";
 		}
+		else {
+			outputFile << row[0] << "," << "0," <<"\n";
 
-		CvScalar point = pointArray[label_y * cDepthWidth + label_x];
-
-		outputFile << row[0] << "," << point.val[0] << "," << point.val[1] << "," << point.val[2] << ","  << point.val[0] - reference.val[0] << "," << point.val[1] - reference.val[1] << "," << point.val[2] - reference.val[2] << "\n";
+		}
 		in.close();
 		
 		free(pointArray);
